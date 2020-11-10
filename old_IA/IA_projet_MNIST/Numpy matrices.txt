@@ -1,0 +1,39 @@
+NUMPY matrices 
+
+- pour avoir une matrice colonne : 
+	>>> a = np.arange(1, 6)
+	>>> a
+	array([1, 2, 3, 4, 5])
+	>>> a.shape = (1, np.size(a))
+	>>> a
+	array([[1, 2, 3, 4, 5]])
+	>>> a.shape = (np.size(a), 1)
+	>>> a
+	array([[1],
+       [2],
+       [3],
+       [4],
+       [5]])
+	   
+- produit matriciel :
+	>>> a = np.arange(1, 6)
+	>>> a
+	array([1, 2, 3, 4, 5])
+	>>> a.shape = (1, np.size(a))
+	>>> a
+	array([[1, 2, 3, 4, 5]])
+	>>> a.shape = (np.size(a), 1)
+	>>> a
+	array([[1],
+		   [2],
+		   [3],
+		   [4],
+		   [5]])
+   Le produit d’une matrice de taille n x m par une matrice m x p donne une matrice n x p.
+   
+- matrice : 
+
+	>>> a = np.array([[1, 2, 3], [4, 5, 6]])
+	>>> a
+	array([[1, 2, 3],
+		   [4, 5, 6]])

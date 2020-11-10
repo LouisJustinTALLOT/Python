@@ -1,0 +1,58 @@
+﻿Programme IA sous python : fonction, classes...
+
+- Module pickle pour sauvegarder les matrices
+- Module numpy pour les matrices 
+
+- Class Network(object) avec:
+	- Les matrices : 
+		- Matrice 784*1 avec les pixels
+		- une matrice 16*784 entre D et 1 + une matrice de biais 16*1
+		- une matrice d'arrivée pour 1
+		- une matrice 16*16 entre 1 et 2 + une matrice de biais 16*1
+		- une matrice d'arrivée pour 2 
+		- une matrice 10*16 entre  2 et A + une matrice de biais 10*1
+		- une matrice finale 10*1
+		- une matrice de résultat attendu 10*1 avec des 0 et un 1
+		- une matrice de cout
+		=> TOTAL : 12 matrices
+		
+	- Les fonctions :
+		- une fonction Calcul(matrice_image,matrices_1à6) qui effectue le calcul des matrices et renvoie la matrice d'arrivée
+		- une fonction Cout(réseau) 
+		- une fonction Backpropagation(),qui enlève 0.1 à un coefficient, calcule le coût, si ça le diminue le garde, sinon teste en augmentant, et si augmente aussi prend pour 2 fois moins et ainsi de suite pour tous les coefficients...
+		
+- une fonction sigmoide
+- une fonction de création aléatoire de matrice n*p
+- fonction créant la matrice de résultat
+- transformer les valeurs des images entre 0 et 1(diviser  par 255)	
+- inclure une partie graphique avec affichage du nombre traité en cours, (fonction d'affichage du nombre sous tkinter):
+	- un bouton train/test qui changera la valeur de train_oui_ou_non
+	- un bouton diminuer qui divisera la valeur de taille_de_backpropagation par 2
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
