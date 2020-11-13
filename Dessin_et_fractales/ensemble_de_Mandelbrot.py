@@ -12,10 +12,13 @@ import matplotlib.pyplot as plt
 import time
 
 
-N = 10000  # le nombre de points de trace
+N = 2000  # le nombre de points de trace
 
 axe_x = np.linspace(-2., 0.5, N)
 axe_y = np.linspace(-1.25, 1.25, N)
+
+#axe_x = np.linspace(-1.9, -1.6, N)
+#axe_y = np.linspace(-0.075, 0.075, N)
 
 ### tests de représentation d'une matrice sous matplotlib
 #a = np.random.randn(N,N)
@@ -24,6 +27,18 @@ axe_y = np.linspace(-1.25, 1.25, N)
 #fig, ax =  plt.subplots()
 #ax.matshow(a, cmap = plt.cm.Blues)
 #plt.show()
+
+"""
+on va essayer d'optimiser le programme en reduisant les calculs
+au niveau de la partie "peu interessante" dans les coins gauches
+ou la fractale ne se trouve pas
+"""
+
+#x = np.linspace(-2, 0.5, N//10)
+#y = np.linspace(-1.25, 1.25, N//10)
+
+
+# np meshgrid
 
 
 def est_dedans(x,y):
@@ -62,5 +77,5 @@ print(t2-t1)
 
 plt.pcolor(X,Y,Z)
 plt.axis("equal")
+plt.savefig("mandelbrot.png", dpi=1500)
 plt.show()
-
