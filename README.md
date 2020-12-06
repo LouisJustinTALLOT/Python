@@ -2,6 +2,8 @@
 
 Ce dépôt `GitHub` regroupe ma programmation en Python excepté peut-être les plus gros projets.
 
+[![CodeFactor](https://www.codefactor.io/repository/github/louisjustintallot/python/badge)](https://www.codefactor.io/repository/github/louisjustintallot/python)
+
 Les dossiers sont les suivants :
 
 |Dossier| Description|
