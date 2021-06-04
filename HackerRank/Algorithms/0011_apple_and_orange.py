@@ -19,7 +19,21 @@ import sys
 #
 
 def countApplesAndOranges(s, t, a, b, apples, oranges):
-    # Write your code here
+    res_oranges = 0
+    res_apples = 0
+
+    for apple in apples:
+        landing_point = a + apple
+        if s <= landing_point and landing_point <= t:
+            res_apples += 1
+
+    for orange in oranges:
+        landing_point = b + orange
+        if s <= landing_point and landing_point <= t:
+            res_oranges += 1       
+
+    print(res_apples)
+    print(res_oranges)
 
 if __name__ == '__main__':
     first_multiple_input = input().rstrip().split()
