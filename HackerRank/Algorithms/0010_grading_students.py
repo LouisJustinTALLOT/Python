@@ -13,11 +13,21 @@ import sys
 # The function accepts INTEGER_ARRAY grades as parameter.
 #
 
-def nearest_multiple_of_5(nb):
-    pass
+def next_multiple_of_5(nb):
+    for i in range(6):
+        if (nb + i) % 5 == 0:
+            return nb + i
 
 def grade_rounding(grade):
-    pass
+    if grade < 38:
+        # too small, no rounding
+        return grade
+    
+    next_mpt_5 = next_multiple_of_5(grade)
+    if next_mpt_5 - grade < 3:
+        return next_mpt_5
+    
+    return grade
 
 def gradingStudents(grades):
     return list(map(grade_rounding, grades))
