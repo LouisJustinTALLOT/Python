@@ -82,6 +82,7 @@ DATABASES = {
     }
 }
 
+SPATIALITE_LIBRARY_PATH = "mod_spatialite.dll"
 
 # Password validation
 # https://docs.djangoproject.com/en/3.2/ref/settings/#auth-password-validators
