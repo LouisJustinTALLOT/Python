@@ -23,19 +23,17 @@ from pytube.helpers import safe_filename
 from multiprocessing import Pool
 
 
-def download_playlist(playlist):
-    for i, video_url in enumerate(playlist.video_urls):
-        print(f"Downloading video {i+1}/{len(playlist.video_urls)} of " + playlist.title, end="")
-        print("\r", end="")
-
+def download_video(tuple_video_url_playlist_title):
+    try:
+        video_url, playlist_title = tuple_video_url_playlist_title
         yt = YouTube(video_url)
+        yt.streams.get_by_itag(140).download(safe_filename(playlist_title))
+    except Exception as e:
+        print(e, yt.title)
 
-        try:
-            stream = yt.streams.get_by_itag(140)
-            stream.download(safe_filename(playlist.title))
-        except Exception as e:
-            print(e, yt.title)
-
+def download_playlist(playlist):
+    with Pool(processes=8) as pool:
+        pool.map(download_video, zip(playlist.video_urls, [playlist.title]*len(playlist.video_urls)))
 
     print("Playlist " + playlist.title + " downloaded !              ")
 
@@ -51,7 +49,7 @@ if __name__ == '__main__':
 
     playlist_list = [Playlist(url) for url in playlist_urls_list]
 
-    with Pool(4) as p:
-        p.map(download_playlist, playlist_list)
+    for playlist in playlist_list:
+        download_playlist(playlist)
 
     print(f"All {len(playlist_list)} playlists downloaded !")
