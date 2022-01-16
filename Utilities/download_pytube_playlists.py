@@ -24,18 +24,20 @@ from multiprocessing import Pool
 
 
 def download_playlist(playlist):
-    for video_url in playlist.video_urls:
+    for i, video_url in enumerate(playlist.video_urls):
+        print(f"Downloading video {i+1}/{len(playlist.video_urls)} of " + playlist.title, end="")
+        print("\r", end="")
+
         yt = YouTube(video_url)
 
-        # print(list(yt.streams.filter(
-        #     only_audio=True, file_extension='mp4'
-        #     )))
-        # print("")
-        stream = yt.streams.get_by_itag(140)
         try:
+            stream = yt.streams.get_by_itag(140)
             stream.download(safe_filename(playlist.title))
         except Exception as e:
             print(e, yt.title)
+
+
+    print("Playlist " + playlist.title + " downloaded !              ")
 
 
 if __name__ == '__main__':
@@ -51,3 +53,5 @@ if __name__ == '__main__':
 
     with Pool(4) as p:
         p.map(download_playlist, playlist_list)
+
+    print(f"All {len(playlist_list)} playlists downloaded !")
