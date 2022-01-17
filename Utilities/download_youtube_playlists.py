@@ -115,6 +115,31 @@ def download_all_playlists(playlist_urls_list: List[str]):
         download_playlist(pl)
 
 
+def build_all_urls_list(input_args: List[str]):
+    """Create the list of all the playlist URLs to download
+    from the URLs and the text files passed as arguments
+
+    Args:
+        input_args (List[str]): The list of arguments passed to the script
+
+    Returns:
+        List[str]: the list of all the playlist URLs to download
+    """
+    playlist_urls_list: List[str] = []
+    # we can pass directly urls or a file containing urls
+    for string in input_args:
+        if ".txt" in string or ".md" in string or "youtube" not in string:
+            try:
+                with open(string, "r") as file:
+                    playlist_urls_list.extend(file.read().split())
+            except FileNotFoundError: # it was not a file
+                pass
+        else:
+            playlist_urls_list.append(string)
+
+    return playlist_urls_list
+
+
 def main():
     """Main function of the program, creates the CLI
     """
@@ -126,17 +151,7 @@ def main():
         # passed to argv
         input_args = sys.argv[1:]
 
-    playlist_urls_list = []
-    # we can pass directly urls or a file containing urls
-    for string in input_args:
-        if ".txt" in string or ".md" in string or "youtube" not in string:
-            try:
-                with open(string, "r") as file:
-                    playlist_urls_list.extend(file.read().split())
-            except FileNotFoundError: # it was not a file
-                pass
-        else:
-            playlist_urls_list.append(string)
+    playlist_urls_list = build_all_urls_list(input_args)
 
     download_all_playlists(playlist_urls_list)
 
