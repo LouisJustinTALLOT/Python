@@ -22,25 +22,50 @@ __author__ = "Louis-Justin TALLOT"
 import sys
 from typing import Tuple
 
-from multiprocessing import Pool
+from multiprocessing import Value, Process
 
 from pytube import Playlist, YouTube
 from pytube.helpers import safe_filename
 from pytube.exceptions import PytubeError
 
 
-def download_video(tuple_video_url_playlist_title: Tuple[str, str]):
+def chunk(l, n):
+    """Yield n number of sequential chunks from l.
+    
+    From https://stackoverflow.com/a/54802737/14451421
+    """
+    l = list(l)
+    d, r = divmod(len(l), n)
+    for i in range(n):
+        si = (d+1)*(i if i < r else r) + d*(0 if i < r else i - r)
+        yield l[si:si+(d+1 if i < r else d)]
+
+
+def download_video(args_tuple: Tuple[str, str, Value, int]):
     """Downloads the audio of a given YouTube video
 
     Args:
-        tuple_video_url_playlist_title (Tuple[str, str]): The full URL of the video to download, and the playlist title
+        args_tuple (Tuple[str, str, Value, int]): The full URL of the video to download, 
+            the playlist title, the shared counter, and the number of videos in the playlist
     """
+    video_url, playlist_title, counter, nb_videos = args_tuple
+
     try:
-        video_url, playlist_title = tuple_video_url_playlist_title
         yt = YouTube(video_url)
-        yt.streams.get_by_itag(140).download(safe_filename(playlist_title))
+        yt.streams.get_by_itag(140).download(safe_filename(playlist_title))   
     except PytubeError as e:
         print(e, yt.title)
+
+    with counter.get_lock():
+        counter.value += 1
+
+    print(f"Downloaded {counter.value}/{nb_videos} videos from playlist {playlist_title}", end="\r")
+
+
+def download_playlist_chunk(args_list):
+    for args_tuple in args_list:
+        download_video(args_tuple)
+
 
 def download_playlist(playlist: Playlist):
     """Downloads the audio of the videos from a given YouTube playlist
@@ -48,15 +73,32 @@ def download_playlist(playlist: Playlist):
     Args:
         playlist_url (Playlist): The full URL of the playlist to download
     """
-    with Pool(processes=8) as pool:
-        pool.map(
-            download_video,
-            zip(
-                playlist.video_urls, [playlist.title]*len(playlist.video_urls)
-            )
-        )
 
-    print("Playlist " + playlist.title + " downloaded !")
+    video_urls = playlist.video_urls
+    nb_videos = len(video_urls)
+    nb_processes = min(8, nb_videos)
+
+    shared_counter = Value('i', 0)
+
+    split_args_list = chunk(
+        zip(
+                video_urls,
+                (playlist.title for _ in range(nb_videos)),
+                (shared_counter for _ in range(nb_videos)),
+                (nb_videos for _ in range(nb_videos)),
+            ),
+        nb_processes
+    )
+
+    processes_list = [Process(target=download_playlist_chunk, args=(args,)) for args in split_args_list]
+
+    for process in processes_list:
+        process.start()
+    
+    for process in processes_list:
+        process.join()
+
+    print("Playlist " + playlist.title + " downloaded !" + " "*20)
 
 
 if __name__ == '__main__':
