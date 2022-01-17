@@ -20,7 +20,7 @@ __author__ = "Louis-Justin TALLOT"
 # by @LouisJustinTALLOT (https://github.com/LouisJustinTALLOT)
 
 import sys
-from typing import Tuple
+from typing import List, Tuple
 
 from multiprocessing import Value, Process
 
@@ -94,14 +94,28 @@ def download_playlist(playlist: Playlist):
 
     for process in processes_list:
         process.start()
-    
+
     for process in processes_list:
         process.join()
 
     print("Playlist " + playlist.title + " downloaded !" + " "*20)
 
 
-if __name__ == '__main__':
+def download_all_playlists(playlist_urls_list: List[str]):
+    """Downloads the audio from all the playlists passed as arguments
+
+    Args:
+        playlist_urls_list (List[str]): A list of Youtube playlist URLs
+    """
+    playlist_list = [Playlist(url) for url in playlist_urls_list]
+
+    for pl in playlist_list:
+        download_playlist(pl)
+
+
+def main():
+    """Main function of the program, creates the CLI
+    """
     if len(sys.argv) == 1:
         # print the help
         print(__doc__)
@@ -122,9 +136,10 @@ if __name__ == '__main__':
         else:
             playlist_urls_list.append(string)
 
-    playlist_list = [Playlist(url) for url in playlist_urls_list]
+    download_all_playlists(playlist_urls_list)
 
-    for pl in playlist_list:
-        download_playlist(pl)
+    print(f"All {len(playlist_urls_list)} playlists downloaded !")
 
-    print(f"All {len(playlist_list)} playlists downloaded !")
+
+if __name__ == '__main__':
+    main()
