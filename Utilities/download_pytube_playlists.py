@@ -22,6 +22,7 @@ __author__ = "Louis-Justin TALLOT"
 import sys
 from pytube import Playlist, YouTube
 from pytube.helpers import safe_filename
+from pytube.exceptions import PytubeError
 
 from multiprocessing import Pool
 
@@ -31,7 +32,7 @@ def download_video(tuple_video_url_playlist_title):
         video_url, playlist_title = tuple_video_url_playlist_title
         yt = YouTube(video_url)
         yt.streams.get_by_itag(140).download(safe_filename(playlist_title))
-    except Exception as e:
+    except PytubeError as e:
         print(e, yt.title)
 
 def download_playlist(playlist):
@@ -57,7 +58,7 @@ if __name__ == '__main__':
             try:
                 with open(string, "r") as file:
                     playlist_urls_list.extend(file.read().split())
-            except Exception: # it was not a file
+            except FileNotFoundError: # it was not a file
                 pass
         else:
             playlist_urls_list.append(string)
