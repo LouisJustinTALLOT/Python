@@ -92,6 +92,8 @@ def download_playlist(playlist: Playlist):
 
     processes_list = [Process(target=download_playlist_chunk, args=(args,)) for args in split_args_list]
 
+    print(f"Starting download of playlist {playlist.title}...", end="\r")
+
     for process in processes_list:
         process.start()
 
