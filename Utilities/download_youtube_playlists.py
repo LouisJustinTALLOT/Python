@@ -20,14 +20,21 @@ __author__ = "Louis-Justin TALLOT"
 # by @LouisJustinTALLOT (https://github.com/LouisJustinTALLOT)
 
 import sys
+from typing import Tuple
+
+from multiprocessing import Pool
+
 from pytube import Playlist, YouTube
 from pytube.helpers import safe_filename
 from pytube.exceptions import PytubeError
 
-from multiprocessing import Pool
 
+def download_video(tuple_video_url_playlist_title: Tuple[str, str]):
+    """Downloads the audio of a given YouTube video
 
-def download_video(tuple_video_url_playlist_title):
+    Args:
+        tuple_video_url_playlist_title (Tuple[str, str]): The full URL of the video to download, and the playlist title
+    """
     try:
         video_url, playlist_title = tuple_video_url_playlist_title
         yt = YouTube(video_url)
@@ -35,11 +42,21 @@ def download_video(tuple_video_url_playlist_title):
     except PytubeError as e:
         print(e, yt.title)
 
-def download_playlist(playlist):
-    with Pool(processes=8) as pool:
-        pool.map(download_video, zip(playlist.video_urls, [playlist.title]*len(playlist.video_urls)))
+def download_playlist(playlist: Playlist):
+    """Downloads the audio of the videos from a given YouTube playlist
 
-    print("Playlist " + playlist.title + " downloaded !              ")
+    Args:
+        playlist_url (Playlist): The full URL of the playlist to download
+    """
+    with Pool(processes=8) as pool:
+        pool.map(
+            download_video,
+            zip(
+                playlist.video_urls, [playlist.title]*len(playlist.video_urls)
+            )
+        )
+
+    print("Playlist " + playlist.title + " downloaded !")
 
 
 if __name__ == '__main__':
@@ -65,7 +82,7 @@ if __name__ == '__main__':
 
     playlist_list = [Playlist(url) for url in playlist_urls_list]
 
-    for playlist in playlist_list:
-        download_playlist(playlist)
+    for pl in playlist_list:
+        download_playlist(pl)
 
     print(f"All {len(playlist_list)} playlists downloaded !")
