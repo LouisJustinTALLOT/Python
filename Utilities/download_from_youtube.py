@@ -1,18 +1,24 @@
-"""Small script to download all videos from a YouTube playlist
+"""
+Small utility script to download YouTube playlists and videos
 By @LouisJustinTALLOT
 
 Usage:
-    If you have only a few playlists to download, you can simply
+    If you have only a few playlists or videos to download, you can simply
     run the script with the playlist URLs as arguments, separated by spaces.
-    ```python download_pytube_playlists.py <playlist_1_url> <playlist_2_url> ...```
 
-    In order to download more playlists, you can write all the playlist URLs
-    to a (some) file(s), and then call the script with the name of the file(s)
-    as arguments (you can even mix in youtube urls):
-    ```python download_pytube_playlists.py playlist_urls.txt [playlist_urls_2.txt ...] [youtube playlist urls ...]```
+    python download_from_youtube.py <playlist_url> <video_url> ...
+
+
+    In order to download more playlists, you can write all the playlist
+    and videos URLs to a (some) file(s), and then call the script with the
+    name of the file(s) as arguments (you can even mix in youtube urls):
+
+    python download_from_youtube.py urls.txt [urls_2.txt ...] [youtube playlist urls ...] [youtube videos urls]
 
 Example:
-    python download_pytube_playlists.py https://www.youtube.com/playlist?list=PLzPiaCaGenuqyZEkfAgUF_CNnNroKKKV7 https://www.youtube.com/playlist?list=PL18D36145BE009EDC
+    python download_from_youtube.py urls.txt
+
+    python download_from_youtube.py https://www.youtube.com/playlist?list=PLzPiaCaGenuqyZEkfAgUF_CNnNroKKKV7 https://www.youtube.com/playlist?list=PL18D36145BE009EDC
 """
 
 __author__ = "Louis-Justin TALLOT"
@@ -28,6 +34,9 @@ from pytube import Playlist, YouTube
 from pytube.helpers import safe_filename
 from pytube.exceptions import PytubeError
 
+PLAYLIST = "PLAYLIST"
+VIDEO = "VIDEO"
+ERROR = "ERROR"
 
 def chunk(l, n):
     """Yield n number of sequential chunks from l.
@@ -39,6 +48,21 @@ def chunk(l, n):
     for i in range(n):
         si = (d+1)*(i if i < r else r) + d*(0 if i < r else i - r)
         yield l[si:si+(d+1 if i < r else d)]
+
+def is_video_or_playlist(url: str) -> str:
+    """Checks if the given url corresponds to a playlist or a video
+
+    Args:
+        url (str): The url to check
+
+    Returns:
+        str: "VIDEO" if the url is a video, "PLAYLIST" if it is a playlist, "ERROR" otherwise
+    """
+    if "playlist" in url:
+        return PLAYLIST
+    if "watch" in url:
+        return VIDEO
+    return ERROR
 
 
 def download_video(args_tuple: Tuple[str, str, Value, int]):
@@ -67,15 +91,19 @@ def download_playlist_chunk(args_list):
         download_video(args_tuple)
 
 
-def download_playlist(playlist: Playlist):
+def download_playlist(args_tuple: Tuple[List[str], str]):
     """Downloads the audio of the videos from a given YouTube playlist
+    or from a list of videos
 
     Args:
-        playlist_url (Playlist): The full URL of the playlist to download
+        args_tuple Tuple[List[str], str]: Tuple(list of video URLs, playlist title)
     """
-
-    video_urls = playlist.video_urls
+    video_urls, title = args_tuple
     nb_videos = len(video_urls)
+
+    if nb_videos == 0:
+        return
+    
     nb_processes = min(8, nb_videos)
 
     shared_counter = Value('i', 0)
@@ -83,7 +111,7 @@ def download_playlist(playlist: Playlist):
     split_args_list = chunk(
         zip(
                 video_urls,
-                (playlist.title for _ in range(nb_videos)),
+                (title for _ in range(nb_videos)),
                 (shared_counter for _ in range(nb_videos)),
                 (nb_videos for _ in range(nb_videos)),
             ),
@@ -92,7 +120,7 @@ def download_playlist(playlist: Playlist):
 
     processes_list = [Process(target=download_playlist_chunk, args=(args,)) for args in split_args_list]
 
-    print(f"Starting download of playlist {playlist.title}...", end="\r")
+    print(f"Starting download of playlist {title}...", end="\r")
 
     for process in processes_list:
         process.start()
@@ -100,7 +128,7 @@ def download_playlist(playlist: Playlist):
     for process in processes_list:
         process.join()
 
-    print("Playlist " + playlist.title + " downloaded !" + " "*20)
+    print("Playlist " + title + " downloaded !" + " "*20)
 
 
 def download_all_playlists(playlist_urls_list: List[str]):
@@ -112,8 +140,34 @@ def download_all_playlists(playlist_urls_list: List[str]):
     playlist_list = [Playlist(url) for url in playlist_urls_list]
 
     for pl in playlist_list:
-        download_playlist(pl)
+        download_playlist((pl.video_urls, pl.title))
 
+
+def download_all_individual_videos(videos_url_list: List[str]):
+    download_playlist((videos_url_list, "Individual videos"))
+
+
+def separate_videos_and_playlists(urls_list: List[str]) -> Tuple[List[str], List[str]]:
+    """Separates the list of playlist URLs into a list of playlist URLs and a list of video URLs
+
+    Args:
+        playlist_urls_list (List[str]): The list of playlist URLs to separate
+
+    Returns:
+        Tuple[List[str], List[str]]: The list of playlist URLs and the list of video URLs
+    """
+    videos_url_list: List[str] = []
+    playlist_urls_list: List[str] = []
+
+    for url in urls_list:
+        if is_video_or_playlist(url) == VIDEO:
+            videos_url_list.append(url)
+        elif is_video_or_playlist(url) == PLAYLIST:
+            playlist_urls_list.append(url)
+        else:
+            print(f"Unknown url {url}")
+
+    return playlist_urls_list, videos_url_list
 
 def build_all_urls_list(input_args: List[str]):
     """Create the list of all the playlist URLs to download
@@ -126,18 +180,29 @@ def build_all_urls_list(input_args: List[str]):
         List[str]: the list of all the playlist URLs to download
     """
     playlist_urls_list: List[str] = []
+    videos_urls_list: List[str] = []
+
+    if "-h" in input_args[0] or "-help" in input_args[0]:
+        print(__doc__)
+        sys.exit(0)
+
     # we can pass directly urls or a file containing urls
     for string in input_args:
         if ".txt" in string or ".md" in string or "youtube" not in string:
             try:
                 with open(string, "r") as file:
-                    playlist_urls_list.extend(file.read().split())
+                    separated = separate_videos_and_playlists(file.read().split())
             except FileNotFoundError: # it was not a file
                 pass
+            else:
+                playlist_urls_list.extend(separated[0])
+                videos_urls_list.extend(separated[1])
         else:
-            playlist_urls_list.append(string)
+            separated = separate_videos_and_playlists([string])
+            playlist_urls_list.extend(separated[0])
+            videos_urls_list.extend(separated[1])
 
-    return playlist_urls_list
+    return playlist_urls_list, videos_urls_list
 
 
 def main():
@@ -151,11 +216,12 @@ def main():
         # passed to argv
         input_args = sys.argv[1:]
 
-    playlist_urls_list = build_all_urls_list(input_args)
+    playlist_urls_list, videos_urls_list = build_all_urls_list(input_args)
 
     download_all_playlists(playlist_urls_list)
+    download_all_individual_videos(videos_urls_list)
 
-    print(f"All {len(playlist_urls_list)} playlists downloaded !")
+    print(f"All playlists downloaded !")
 
 
 if __name__ == '__main__':
