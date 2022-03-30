@@ -19,7 +19,8 @@ from nltk.probability import FreqDist
 from nltk.stem import SnowballStemmer
 
 
-link = '/Users/salomeouaknine/Desktop'
+
+link = '.'
 document = '/JORFARTI000045294276.xml'
 
 #1. Recuperer le document
@@ -135,7 +136,7 @@ article_et_code_tuple = article_et_code_dans_meme_tuple(quote_ngrams)
 
 
 ### Rajouter les codes, leurs liens legifrance et leur version stemmée 
-file_codes = '/Users/salomeouaknine/Documents/Mines_2A/T3/essais/les_codes_juridiques.csv'
+file_codes = 'les_codes_juridiques.csv'
 df_codes = pd.read_csv(file_codes, sep=';')
 df_codes_tokenise = []
 df_codes_string = []
