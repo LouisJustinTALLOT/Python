@@ -68,14 +68,14 @@ def get_messages_one_convo(messages_dir_path: Path, convos_json: Dict) -> None:
 
             # short-circuit if not a 1-1 convo:
             if data["thread_type"] != "Regular":
-                convos_json["Other"].append(data["title"])
+                convos_json["Other"].append(data["title"].encode('latin1').decode('utf8'))
                 return
 
             # get the name
             if not name:
-                name = data["title"]
+                name = data["title"].encode('latin1').decode('utf8')
             else:
-                assert name == data["title"]
+                assert name == data["title"].encode('latin1').decode('utf8')
 
             # get the messages 
             list_messages.extend(data["messages"])
