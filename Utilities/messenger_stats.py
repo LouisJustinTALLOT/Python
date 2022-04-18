@@ -17,6 +17,7 @@ import seaborn as sns
 
 import pandas as pd
 
+from sklearn.neighbors import KernelDensity
 import pprint
 
 _fb_dir_path: ContextVar[Path] = ContextVar("_fb_dir_path")
@@ -114,7 +115,8 @@ def plot_messages_stats():
 
         for message in messages_list:
             ts_ms: int = message["timestamp_ms"]
-            list_times_stamps.append(datetime.datetime.fromtimestamp(ts_ms/1000.0))
+            # list_times_stamps.append(datetime.datetime.fromtimestamp(ts_ms/1000.0))
+            list_times_stamps.append(ts_ms)
 
         list_times_stamps.sort()
         messages_nb_per_person[conv["name"]] = list_times_stamps
@@ -125,7 +127,7 @@ def plot_messages_stats():
         {
             person: messages_list + [np.NaN] * (max_length - len(messages_list)) \
             for person, messages_list in messages_nb_per_person.items() \
-            if len(messages_list)>1000
+            if len(messages_list)>15000
         }
     )
    
@@ -138,6 +140,34 @@ def plot_messages_stats():
             bw_method=0.05,
             color=sns.color_palette(as_cmap=True)[i]
         )
+
+        X = source.loc[:, person].values.reshape(-1, 1)
+
+        print(X)
+        kde = KernelDensity(kernel='gaussian', bandwidth=200000000).fit(X)#.reshape(-1, 1))
+
+        log_density_values=kde.score_samples(X)
+        density=np.exp(log_density_values)
+        plt.figure()
+        plt.plot(density)
+
+
+        kde = KernelDensity(kernel='epanechnikov', bandwidth=200000000).fit(X)#.reshape(-1, 1))
+
+        log_density_values=kde.score_samples(X)
+        density=np.exp(log_density_values)
+        plt.figure()
+        plt.plot(density)
+
+
+        kde = KernelDensity(kernel='tophat', bandwidth=20000000).fit(X)#.reshape(-1, 1))
+
+        log_density_values=kde.score_samples(X)
+        density=np.exp(log_density_values)
+        plt.figure()
+        plt.plot(density)
+
+
 
     plt.xlabel("")
     plt.legend(loc="upper left")
