@@ -12,7 +12,10 @@ import datetime
 import json
 
 import matplotlib.pyplot as plt
-import altair as alt # type: ignore
+import numpy as np # type: ignore
+import seaborn as sns
+
+import pandas as pd
 
 import pprint
 
@@ -99,20 +102,96 @@ def find_all_persons() -> None:
         get_messages_one_convo(convo, _all_convos_json)
 
 
-def plot_messages_stats():  
+def plot_messages_stats():
     _find_fb_dir_path()
     find_all_persons()
 
-    for conv in _all_convos_json["Regular"].values():
-        print(conv["name"], len(conv["messages"]))
+    convos = list(_all_convos_json["Regular"].values())
+    convos.sort(key=lambda conv: len(conv["messages"]), reverse=True)
+    convos = convos[:10]
 
+    all_names, all_messages = [c["name"] for c in convos], [len(c["messages"]) for c in convos]
+
+    source = pd.DataFrame({"name": all_names, "messages": all_messages})
+
+    # # We bar plot the messages per person
+    # plt.bar(all_names, list(map(len, all_messages)))
+    # plt.show()
+
+    # chart=alt.Chart(source).mark_bar().encode(
+    #     x='name',
+    #     y='messages',
+    # ).interactive()
+    # chart.show()
+    # chart.save("./messages_stats.html")
+
+
+    # for conv in _all_convos_json["Regular"].values():
+    #     print(conv["name"], len(conv["messages"]))
+
+    messages_nb_per_person = {}
+    
+    for conv in _all_convos_json["Regular"].values():
+        messages_list = conv["messages"]
+        list_times_stamps = []
+
+        for message in messages_list:
+            ts_ms: int = message["timestamp_ms"]
+            list_times_stamps.append(datetime.datetime.fromtimestamp(ts_ms/1000.0))
+
+        list_times_stamps.sort()
+        messages_nb_per_person[conv["name"]] = list_times_stamps
+
+    max_length = max(len(v) for v in messages_nb_per_person.values())
+
+    source = pd.DataFrame.from_dict({person: messages_list + [np.NaN] * (max_length-len(messages_list)) for person, messages_list in messages_nb_per_person.items() if len(messages_list)>1000})
+
+
+    # print(source.head())
+    # for person, messages_list in messages_nb_per_person.items():
+    #     if len(messages_list) > 400:
+    #         # plt.hist(messages_list, label=person+" "+str(len(messages_list)), bins=1000)
+    #         sns.kdeplot(
+    #             x=messages_list,
+    #             # y = np.arange(len(messages_list)),
+    #             label=person,
+    #             shade=True,
+    #             bw_method=0.05,
+    #         )
+    #     plt.legend()
+
+
+    
+    # one kdeplot per column
+    for i, person in enumerate(source.columns):
+        sns.kdeplot(
+            x=source[person],
+            # hue=person,
+            # y = np.arange(len(messages_list)),
+            label=person,
+            shade=True,
+            bw_method=0.05,
+            color=sns.color_palette(as_cmap=True)[i]
+        )
+
+    # sns.kdeplot(data=source, shade=True, bw_method=0.05)
+
+    # sns.kdeplot(
+    #     data=source,
+    #     x="messages",
+    #     # y = np.arange(len(messages_list)),
+    #     # label=person,
+    #     shade=True,
+    #     bw_method=0.05,
+    # )
+    plt.legend(loc="upper left")
+
+
+    # plt.figure()
+    plt.tight_layout()
+    plt.show()
 
 
 if __name__ == "__main__":
     plot_messages_stats()
-
-
-
-
-
 
